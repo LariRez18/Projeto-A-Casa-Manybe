@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>A Casa Manybe - Agendamentos</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body>
+
+    <div class="app-wrapper">
+        <!-- HEADER PRINCIPAL -->
+        <header class="main-header">
+            <div class="logo-area" onclick="navegarPara('sobre')">
+                <h1>A Casa Manybe</h1>
+            </div>
+            <button id="admin-mode-btn" class="admin-toggle-btn" onclick="gerenciarBotaoAdmin()">
+                <i class="fa-solid fa-lock"></i> <span id="admin-btn-text">Administrativo</span>
+            </button>
+        </header>
+
+        <!-- CONTAINER DO CONTEÚDO -->
+        <div class="main-container">
+            <!-- MENUS LATERAIS (DESKTOP) -->
+            <aside class="sidebar">
+                <button id="side-inicio" class="sidebar-btn active" onclick="navegarPara('inicio')">
+                    <i class="fa-solid fa-house"></i> Início
+                </button>
+                <button id="side-servicos" class="sidebar-btn" onclick="navegarPara('servicos')">
+                    <i class="fa-solid fa-scissors"></i> Procedimentos
+                </button>
+                <button id="side-sobre" class="sidebar-btn" onclick="navegarPara('sobre')">
+                    <i class="fa-solid fa-circle-info"></i> Sobre Nós
+                </button>
+                <button id="side-reservas" class="sidebar-btn" onclick="navegarPara('reservas')">
+                    <i class="fa-solid fa-calendar-check"></i> Meus Horários
+                </button>
+            </aside>
+
+            <!-- CONTEÚDO PRINCIPAL -->
+            <main class="content-area">
+
+                <!-- TELA INICIAL (LOBBY) -->
+                <section id="screen-inicio" class="view-screen">
+                    <div class="welcome-hero">
+                        <h2>Bem-vinda à Casa Manybe</h2>
+                        <p>Escolha uma das opções abaixo para gerenciar ou realizar o seu agendamento exclusivo.</p>
+                        <div class="grid-options">
+                            <div class="action-card" onclick="navegarPara('servicos')">
+                                <i class="fa-solid fa-circle-plus"></i>
+                                <h3>Novo Agendamento</h3>
+                            </div>
+                            <div class="action-card" onclick="navegarPara('reservas')">
+                                <i class="fa-solid fa-clock-rotate-left"></i>
+                                <h3>Ver Meus Horários</h3>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- TELA DE SELEÇÃO DE SERVIÇOS -->
+                <section id="screen-servicos" class="view-screen hidden">
+                    <h3 class="section-title">Selecione o Procedimento</h3>
+                    <div class="search-container">
+                        <input type="text" id="search-input" placeholder="Buscar procedimento pelo nome..."
+                            oninput="filtrarServicos()">
+                    </div>
+                    <div class="category-scroll">
+                        <button class="cat-btn active" onclick="filtrarCategoria('Todos', this)">Todos</button>
+                        <button class="cat-btn" onclick="filtrarCategoria('Unhas', this)">Unhas</button>
+                        <button class="cat-btn" onclick="filtrarCategoria('Cabelo', this)">Cabelo</button>
+                        <button class="cat-btn" onclick="filtrarCategoria('Sobrancelhas', this)">Sobrancelhas</button>
+                        <button class="cat-btn" onclick="filtrarCategoria('Cílios', this)">Cílios</button>
+                        <button class="cat-btn" onclick="filtrarCategoria('Nano', this)">Nano</button>
+                        <button class="cat-btn" onclick="filtrarCategoria('Depilação', this)">Depilação</button>
+                        <button class="cat-btn" onclick="filtrarCategoria('Estética', this)">Estética</button>
+                    </div>
+                    <div id="services-grid-container" class="grid-items"></div>
+                </section>
+
+                <!-- TELA DE SELEÇÃO DE PROFISSIONAL -->
+                <section id="screen-profissionais" class="view-screen hidden">
+                    <h3 class="section-title">Escolha a Profissional</h3>
+                    <div id="profissionais-grid-container" class="grid-items"></div>
+                </section>
+
+                <!-- TELA DE DATA E HORA -->
+                <section id="screen-data-hora" class="view-screen hidden">
+                    <h3 class="section-title">Data & Horário</h3>
+                    <div class="datepicker-box">
+                        <input type="date" id="input-agenda-data" onchange="renderizarSlotsHorario()">
+                    </div>
+                    <div id="agendamento-slots" class="slots-grid"></div>
+                </section>
+
+                <!-- TELA DE MINHAS RESERVAS (ÁREA DO CLIENTE) -->
+                <section id="screen-reservas" class="view-screen hidden">
+                    <h3 class="section-title">Seus Horários Reservados</h3>
+                    <div class="table-responsive">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Data</th>
+                                    <th>Hora</th>
+                                    <th>Procedimento</th>
+                                    <th>Profissional</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="user-reservas-table"></tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <!-- TELA DE LOGIN ADM -->
+                <section id="screen-login" class="view-screen hidden">
+                    <div class="login-card">
+                        <h3>Acesso Restrito</h3>
+                        <p>Entre com suas credenciais de equipe</p>
+                        <div class="form-group login-field">
+                            <label>Usuário</label>
+                            <input type="text" id="login-user" placeholder="Ex: admin">
+                        </div>
+                        <div class="form-group login-field password-field">
+                            <label>Senha</label>
+                            <input type="password" id="login-pass" placeholder="••••••••">
+                        </div>
+                        <button class="submit-btn login-submit-btn" onclick="autenticarAdmin()">Entrar no
+                            Painel</button>
+                    </div>
+                </section>
+
+                <!-- ÁREA ADMINISTRATIVA GERAL -->
+                <section id="screen-admin" class="view-screen hidden">
+                    <div class="admin-header">
+                        <h3 class="section-title admin-title">Painel de Gestão Equipe</h3>
+                    </div>
+
+                    <div class="admin-tabs">
+                        <button class="tab-btn active" onclick="alternarAbasAdmin('agenda', this)">Agenda do
+                            Dia</button>
+                        <button class="tab-btn" onclick="alternarAbasAdmin('bloqueios', this)">Bloqueios</button>
+                        <button class="tab-btn" onclick="alternarAbasAdmin('clientes', this)">Fichas de
+                            Clientes</button>
+                        <button class="tab-btn" onclick="alternarAbasAdmin('cadastros', this)">Novos
+                            Procedimentos</button>
+                    </div>
+                    <!-- NOVA ABA: BLOQUEIO DE AGENDA -->
+                    <div id="adm-tab-bloqueios" class="adm-tab-content hidden admin-bloqueios-tab">
+                        <div class="bloqueios-card">
+                            <h3 class="bloqueios-title"><i class="fa-solid fa-calendar-minus"></i> Bloquear Horários da Agenda</h3>
+
+                            <div class="bloqueios-form">
+                                <div>
+                                    <label class="bloqueios-label">Profissional:</label>
+                                    <select id="lock-profissional" class="bloqueios-input">
+                                        <!-- Será preenchido via JS dinamicamente -->
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label class="bloqueios-label">Data inicial do bloqueio:</label>
+                                    <input type="date" id="lock-data-inicio" class="bloqueios-input">
+                                </div>
+
+                                <div>
+                                    <label class="bloqueios-label">Data final do bloqueio:</label>
+                                    <input type="date" id="lock-data-fim" class="bloqueios-input">
+                                </div>
+
+                                <div>
+                                    <label class="bloqueios-label">Turno / Período:</label>
+                                    <select id="lock-turno" class="bloqueios-input">
+                                        <option value="DIA_TODO">Dia todo</option>
+                                        <option value="MANHA">Manhã</option>
+                                        <option value="TARDE">Tarde</option>
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label class="bloqueios-label">Motivo / Justificativa:</label>
+                                    <input type="text" id="lock-motivo" placeholder="Ex: Curso, Almoço, Médico..." class="bloqueios-input">
+                                </div>
+                            </div>
+
+                            <button id="btn-salvar-bloqueio" onclick="salvarBloqueioAgenda()" class="bloqueio-submit-btn">
+                                Confirmar e Bloquear Agenda
+                            </button>
+                            <button id="btn-cancelar-edicao-bloqueio" onclick="cancelarEdicaoBloqueio()" class="bloqueio-cancel-btn">
+                                Cancelar Edição
+                            </button>
+                        </div>
+
+                        <div class="bloqueios-lista">
+                            <h4 class="bloqueios-lista-title">Bloqueios Cadastrados</h4>
+                            <div class="table-responsive">
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>Profissional</th>
+                                            <th>Data</th>
+                                            <th>Turno</th>
+                                            <th>Intervalo</th>
+                                            <th>Justificativa</th>
+                                            <th>Ações</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="adm-tabela-bloqueios"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- ABA AGENDA DO DIA (FILTRÁVEL E COM CONTROLES COMPLETOS) -->
+                    <div id="adm-tab-agenda" class="adm-tab-content">
+                        <div class="form-grid-filter">
+                            <div class="form-group">
+                                <label><i class="fa-solid fa-calendar"></i> Filtrar por Data</label>
+                                <input type="date" id="filtro-adm-data" onchange="renderizarTabelaAdminAgendamentos()">
+                            </div>
+                            <div class="form-group">
+                                <label><i class="fa-solid fa-user-tie"></i> Filtrar Profissional</label>
+                                <select id="filtro-adm-prof" onchange="renderizarTabelaAdminAgendamentos()">
+                                    <option value="Todos">Todos os Profissionais</option>
+                                    <option value="Cilene Goes">Cilene Goes</option>
+                                    <option value="Evelyn Cardoso">Evelyn Cardoso</option>
+                                    <option value="Tayná Capeleti">Tayná Capeleti</option>
+                                    <option value="Cindi">Cindi</option>
+                                    <option value="Brenda Francco">Brenda Francco</option>
+                                    <option value="Djeissy Massunaga">Djeissy Massunaga</option>
+                                    <option value="Felipe Godoy">Felipe Godoy</option>
+                                    <option value="Jessica Silva">Jessica Silva</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label><i class="fa-solid fa-magnifying-glass"></i> Buscar Cliente/Serviço</label>
+                                <input type="text" id="filtro-adm-busca" placeholder="Nome do cliente..."
+                                    oninput="renderizarTabelaAdminAgendamentos()">
+                            </div>
+                            <div class="btn-filter-align">
+                                <button class="submit-btn admin-filter-btn" onclick="limparFiltrosAdmin()">Limpar Filtros</button>
+                            </div>
+                        </div>
+
+                        <div class="table-responsive">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Cliente</th>
+                                        <th>Horário</th>
+                                        <th>Procedimento</th>
+                                        <th>Profissional</th>
+                                        <th>Status</th>
+                                        <th>Ações de Gerenciamento</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="adm-tabela-agendamentos"></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- ABA CLIENTES -->
+                    <div id="adm-tab-clientes" class="adm-tab-content hidden">
+                        <div class="table-responsive">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Nome da Cliente</th>
+                                        <th>Contato</th>
+                                        <th>Último Procedimento</th>
+                                        <th>Histórico de Produtos</th>
+                                        <th>Notas / Anamnese</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="adm-tabela-clientes"></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- ABA CADASTROS -->
+                    <div id="adm-tab-cadastros" class="adm-tab-content hidden">
+                        <div class="form-grid-cadastros">
+                            <div class="form-group">
+                                <label>Nome do Serviço</label>
+                                <input type="text" id="add-servico-nome" placeholder="Ex: Manicure Francesinha">
+                            </div>
+                            <div class="form-group">
+                                <label>Categoria</label>
+                                <select id="add-servico-cat">
+                                    <option value="Unhas">Unhas</option>
+                                    <option value="Cabelo">Cabelo</option>
+                                    <option value="Sobrancelhas">Sobrancelhas</option>
+                                    <option value="Cílios">Cílios</option>
+                                    <option value="Nano">Nano</option>
+                                    <option value="Depilação">Depilação</option>
+                                    <option value="Estética">Estética</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Duração Estimada</label>
+                                <input type="text" id="add-servico-tempo" placeholder="Ex: 45 min, 1h 30min">
+                            </div>
+                            <div class="form-group">
+                                <label>Preço (R$)</label>
+                                <input type="number" id="add-servico-preco" placeholder="0.00" step="0.01">
+                            </div>
+                            <div class="btn-cad-align">
+                                <button class="submit-btn" onclick="salvarNovoServico()">Cadastrar Procedimento</button>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- SEÇÃO SOBRE NÓS -->
+                <section id="screen-sobre" class="view-screen hidden">
+                    <div class="about-card">
+                        <h2 class="about-title">A Casa Manybe</h2>
+                        <p class="about-intro">
+                            Na <strong>Manybe</strong>, acreditamos que o autocuidado vai muito além da estética. É um momento de
+                            conexão, renovação e celebração da sua beleza única, com acolhimento e excelência em cada atendimento.
+                        </p>
+
+                        <div class="about-info-list">
+                            <div class="about-info-item">
+                                <i class="fa-solid fa-location-dot"></i>
+                                <span>Rua Alameda Marajó, 95 Residencial das Ilhas em Bragança Paulista</span>
+                            </div>
+                            <div class="about-info-item">
+                                <i class="fa-solid fa-phone"></i>
+                                <span>(11) 99125-6378</span>
+                            </div>
+                            <div class="about-info-item">
+                                <i class="fa-brands fa-instagram"></i>
+                                <a href="https://www.instagram.com/manybe.brasil?igsh=ZWE0eGkzM2w0YTg2" target="_blank">
+                                    @manybe.brasil
+                                </a>
+                            </div>
+                        </div>
+
+                        <div class="about-video-card">
+                            <a href="https://www.instagram.com/reel/DQ-Bs_FCf4c/" target="_blank" class="about-video-link">
+                                <div class="about-play-btn">
+                                    <i class="fa-solid fa-play"></i>
+                                </div>
+                                <span>Assistir reel no Instagram</span>
+                            </a>
+                        </div>
+
+                    </div>
+                </section>
+            </main>
+        </div>
+
+        <!-- BARRA DE NAVEGAÇÃO MOBILE (CLIENTE) -->
+        <nav class="mobile-nav">
+            <button id="mob-inicio" class="mobile-nav-btn active" onclick="navegarPara('inicio')">
+                <i class="fa-solid fa-house"></i> Início
+            </button>
+            <button id="mob-servicos" class="mobile-nav-btn" onclick="navegarPara('servicos')">
+                <i class="fa-solid fa-scissors"></i> Procedimentos
+            </button>
+            <button id="mob-sobre" class="mobile-nav-btn" onclick="navegarPara('sobre')">
+                <i class="fa-solid fa-circle-info"></i> Sobre Nós
+            </button>
+            <button id="mob-reservas" class="mobile-nav-btn" onclick="navegarPara('reservas')">
+                <i class="fa-solid fa-calendar-check"></i> Meus Horários
+            </button>
+        </nav>
+    </div>
+    <!-- RODAPÉ DE TODA PÁGINA -->
+    <footer class="page-footer">
+        <div class="page-footer-content">
+            <p class="page-footer-text">
+                "Onde o cuidado se transforma em arte e o seu bem-estar encontra o seu momento perfeito. Você é o nosso
+                maior propósito."
+            </p>
+            <div class="page-footer-copy">
+                &copy; 2026 Manybe Brasil. Todos os direitos reservados.
+            </div>
+        </div>
+    </footer>
+    <script src="scripts.js"></script>
+</body>
+
+</html>
