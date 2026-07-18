@@ -642,6 +642,7 @@ main.content-area {
     padding: 0.6rem;
     border: 1px solid #ccc;
     border-radius: 6px;
+    outline: none;
 }
 
 .bloqueio-submit-btn,
@@ -657,7 +658,7 @@ main.content-area {
 }
 
 .bloqueio-submit-btn {
-    background-color: #c94a4a;
+    background-color: #a51010;
 }
 
 .bloqueio-cancel-btn {
@@ -732,10 +733,10 @@ th {
     font-weight: bold;
     display: inline-block;
 }
-.badge.agendado { background-color: #e3f2fd; color: #0d47a1; }
-.badge.confirmado { background-color: #fff3e0; color: #e65100; }
-.badge.concluido { background-color: #e8f5e9; color: #1b5e20; }
-.badge.cancelado { background-color: #ffebee; color: #c62828; }
+.badge.agendado { background-color: #3f3026; color: #ffffff; }
+.badge.confirmado { background-color: #3f3026; color: #ffffff; }
+.badge.concluido { background-color: #3f3026; color: #ffffff; }
+.badge.cancelado { background-color: #3F3026; color: #ffffff; }
 
 .btn-actions-wrapper {
     display: flex;
@@ -758,6 +759,108 @@ th {
 /* BARRA MOBILE */
 .mobile-nav {
     display: none;
+}
+
+/* --- CORRIGE FOCO AZUL EM TODOS OS INPUTS/SELECTS (padrão do navegador) --- */
+input:focus,
+select:focus,
+textarea:focus,
+.bloqueios-input:focus {
+    outline: none;
+    border-color: var(--brand-bg);
+    box-shadow: 0 0 0 3px rgba(142, 111, 94, 0.25);
+}
+
+/* Ajusta a cor do calendário do input type=date para combinar com o marrom */
+input[type="date"] {
+    color-scheme: light; /* mantém ícone escuro, evita tema azul/escuro do SO */
+}
+
+/* Ajusta a cor de "seleção" nativa do texto (evita o azul padrão ao selecionar texto) */
+::selection {
+    background-color: var(--brand-bg);
+    color: #fff;
+}
+
+/* Tenta aproximar a cor do select nativo (funciona parcialmente, depende do navegador/SO) */
+select {
+    accent-color: var(--brand-bg);
+}
+
+/* --- MODAL CUSTOMIZADO (substitui prompt/alert nativos) --- */
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(63, 48, 38, 0.55);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+    padding: 1rem;
+}
+
+.modal-box {
+    background: var(--card-bg);
+    border-radius: 16px;
+    padding: 2rem;
+    max-width: 420px;
+    width: 100%;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.25);
+    border-top: 4px solid var(--brand-gold);
+    animation: fadeIn 0.25s ease-in-out;
+}
+
+.modal-title {
+    color: var(--brand-dark);
+    font-size: 1.2rem;
+    margin-bottom: 0.4rem;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+}
+
+.modal-subtitle {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    margin-bottom: 1.4rem;
+}
+
+.modal-field {
+    margin-bottom: 1rem;
+}
+
+.modal-mensagem {
+    color: var(--text-dark);
+    font-size: 0.95rem;
+    line-height: 1.6;
+    margin-bottom: 1.5rem;
+    white-space: pre-line;
+}
+
+.modal-erro {
+    background: #fdecea;
+    color: #b71c1c;
+    padding: 0.6rem 0.8rem;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    margin-bottom: 1rem;
+}
+
+.modal-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    margin-top: 0.5rem;
+}
+
+.secondary-btn {
+    background-color: transparent;
+    color: var(--brand-dark);
+    border: 1px solid var(--border-light);
+}
+
+.secondary-btn:hover {
+    background-color: #f5f0eb;
 }
 
 /* ================= MEDIA QUERIES ESPECÍFICAS PARA CELULARES ================= */

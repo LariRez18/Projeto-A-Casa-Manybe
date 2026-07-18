@@ -1,4 +1,4 @@
-// --- BASE DE DADOS DOS SERVIÇOS ---
+// --- SERVIÇOS ---
 let listagemServicos = [
     { id: 1, nome: "Manicure", categoria: "Unhas", duracao: "45 min", preco: 40.00 },
     { id: 2, nome: "Pedicure", categoria: "Unhas", duracao: "45 min", preco: 60.00 },
@@ -54,10 +54,68 @@ let profissionais = [
 
 const horariosDisponiveis = ["09:00", "10:30", "12:00", "14:00", "15:30", "17:00"];
 
-let clientesFidelidade = [
-    { nome: "Ana Paula de Souza", contato: "(11) 99841-2334", ultimoProc: "Alongamento em Fibra", historicoProdutos: "Gel Honey e TopCoat Premium Vòlia", notas: "Tem sensibilidade a cabine de LED." },
-    { nome: "Mariana Oliveira", contato: "(11) 98711-4455", ultimoProc: "Escova Modelada", historicoProdutos: "Protetor térmico Kérastase Résistance", notas: "Prefere cabelos escovados para fora." }
-];
+let clientesFidelidade = [];
+
+const DB_CLIENTES = {
+    init() {
+        const salvo = localStorage.getItem('manybe_clientes_v2');
+        if (salvo) {
+            return JSON.parse(salvo);
+        }
+
+        const padrao = [
+            {
+                id: 1,
+                nome: "Ana Paula de Souza",
+                contato: "(11) 99841-2334",
+                ultimoProc: "Alongamento em Fibra",
+                historicoProdutos: "Gel Honey e TopCoat Premium Vòlia",
+                notas: "Tem sensibilidade a cabine de LED.",
+                historicoProcedimentos: [
+                    {
+                        data: "2026-07-10",
+                        servico: "Alongamento em Fibra de Vidro",
+                        profissional: "Tayná Capeleti",
+                        descricao: "Alongamento com acabamento fino.",
+                        produtos: [
+                            { nome: "Gel Honey", quantidade: 1 },
+                            { nome: "TopCoat Premium Vòlia", quantidade: 1 }
+                        ]
+                    }
+                ]
+            },
+            {
+                id: 2,
+                nome: "Mariana Oliveira",
+                contato: "(11) 98711-4455",
+                ultimoProc: "Escova Modelada",
+                historicoProdutos: "Protetor térmico Kérastase Résistance",
+                notas: "Prefere cabelos escovados para fora.",
+                historicoProcedimentos: [
+                    {
+                        data: "2026-07-16",
+                        servico: "Escova Modelada",
+                        profissional: "Felipe Godoy",
+                        descricao: "Escova com acabamento suave.",
+                        produtos: [
+                            { nome: "Protetor térmico Kérastase Résistance", quantidade: 1 }
+                        ]
+                    }
+                ]
+            }
+        ];
+
+        localStorage.setItem('manybe_clientes_v2', JSON.stringify(padrao));
+        return padrao;
+    },
+    get() {
+        return JSON.parse(localStorage.getItem('manybe_clientes_v2')) || [];
+    },
+    salvar(dados) {
+        localStorage.setItem('manybe_clientes_v2', JSON.stringify(dados));
+        return dados;
+    }
+};
 
 // --- BANCO LOCAL ---
 const DB = {
@@ -95,6 +153,7 @@ let agendamentoAtivo = { cliente: "Visitante", servico: null, profissional: null
 let categoriaAtiva = 'Todos';
 let modoAdminAutenticado = false;
 let bloqueioEditandoId = null;
+let clienteFichaAtivaId = null;
 
 const DB_BLOQUEIOS = {
     getBloqueios() {
@@ -122,6 +181,57 @@ const DB_BLOQUEIOS = {
     }
 };
 
+// --- SISTEMA GENÉRICO DE MODAL (SUBSTITUI alert() E confirm() NATIVOS) ---
+function showCustomAlert(mensagem, callback) {
+    const overlay = document.getElementById('modal-alert-overlay');
+    const msgEl = document.getElementById('modal-alert-mensagem');
+    if (!overlay || !msgEl) { if (typeof callback === 'function') callback(); return; }
+
+    msgEl.innerText = mensagem;
+    overlay.classList.remove('hidden');
+    window._customAlertCallback = typeof callback === 'function' ? callback : null;
+}
+
+function fecharCustomAlert() {
+    const overlay = document.getElementById('modal-alert-overlay');
+    if (overlay) overlay.classList.add('hidden');
+
+    const cb = window._customAlertCallback;
+    window._customAlertCallback = null;
+    if (typeof cb === 'function') cb();
+}
+
+function showCustomConfirm(mensagem, onConfirm, onCancel) {
+    const overlay = document.getElementById('modal-confirm-overlay');
+    const msgEl = document.getElementById('modal-confirm-mensagem');
+    if (!overlay || !msgEl) { if (typeof onConfirm === 'function') onConfirm(); return; }
+
+    msgEl.innerText = mensagem;
+    overlay.classList.remove('hidden');
+    window._customConfirmOnConfirm = typeof onConfirm === 'function' ? onConfirm : null;
+    window._customConfirmOnCancel = typeof onCancel === 'function' ? onCancel : null;
+}
+
+function confirmarCustomConfirm() {
+    const overlay = document.getElementById('modal-confirm-overlay');
+    if (overlay) overlay.classList.add('hidden');
+
+    const cb = window._customConfirmOnConfirm;
+    window._customConfirmOnConfirm = null;
+    window._customConfirmOnCancel = null;
+    if (typeof cb === 'function') cb();
+}
+
+function cancelarCustomConfirm() {
+    const overlay = document.getElementById('modal-confirm-overlay');
+    if (overlay) overlay.classList.add('hidden');
+
+    const cb = window._customConfirmOnCancel;
+    window._customConfirmOnConfirm = null;
+    window._customConfirmOnCancel = null;
+    if (typeof cb === 'function') cb();
+}
+
 function atualizarTextoBotaoAdmin(screenId = null) {
     const btnTextEl = document.getElementById('admin-btn-text');
     if (!btnTextEl) return;
@@ -143,7 +253,13 @@ window.addEventListener('DOMContentLoaded', () => {
     const filtroDataAdm = document.getElementById('filtro-adm-data');
     if (filtroDataAdm) filtroDataAdm.value = new Date().toISOString().split('T')[0];
 
+    clientesFidelidade = DB_CLIENTES.get();
+    if (clientesFidelidade.length === 0) {
+        clientesFidelidade = DB_CLIENTES.init();
+    }
+
     renderizarTabelaBloqueios();
+    renderizarClientesFidelidade();
 });
 
 // --- NAVEGAÇÃO ---
@@ -202,7 +318,7 @@ function autenticarAdmin() {
         popularCamposBloqueio();
         renderizarTabelaBloqueios();
     } else {
-        alert("Credenciais incorretas! Tente novamente.");
+        showCustomAlert("Credenciais incorretas! Tente novamente.");
     }
 }
 
@@ -384,41 +500,78 @@ function renderizarSlotsHorario() {
     });
 }
 
+// --- CONFIRMAÇÃO DE AGENDAMENTO (MODAL CUSTOMIZADO, SEM PROMPT NATIVO) ---
 function confirmarAgendamento(hora) {
     agendamentoAtivo.hora = hora;
-    const nomeCliente = prompt("Por favor, digite o seu nome completo para concluir:");
-    if (!nomeCliente || nomeCliente.trim() === "") {
-        alert("O nome é necessário para agendar.");
+
+    document.getElementById('modal-input-nome').value = '';
+    document.getElementById('modal-input-telefone').value = '';
+    document.getElementById('modal-erro-msg').classList.add('hidden');
+
+    document.getElementById('modal-agendamento-overlay').classList.remove('hidden');
+}
+
+function fecharModalAgendamento() {
+    document.getElementById('modal-agendamento-overlay').classList.add('hidden');
+}
+
+function confirmarDadosModal() {
+    const nomeEl = document.getElementById('modal-input-nome');
+    const telefoneEl = document.getElementById('modal-input-telefone');
+    const erroEl = document.getElementById('modal-erro-msg');
+
+    const nomeCliente = nomeEl.value.trim();
+    const telefoneCliente = telefoneEl.value.trim();
+
+    if (!nomeCliente) {
+        erroEl.textContent = 'O nome é necessário para agendar.';
+        erroEl.classList.remove('hidden');
         return;
     }
-    agendamentoAtivo.cliente = nomeCliente.trim();
+
+    if (!telefoneCliente) {
+        erroEl.textContent = 'O telefone é necessário para agendar.';
+        erroEl.classList.remove('hidden');
+        return;
+    }
+
+    agendamentoAtivo.cliente = nomeCliente;
 
     const novaReserva = {
         id: Date.now(),
         cliente: agendamentoAtivo.cliente,
+        telefone: telefoneCliente,
         servico: agendamentoAtivo.servico.nome,
         profissional: agendamentoAtivo.profissional.nome,
         data: agendamentoAtivo.data,
         hora: agendamentoAtivo.hora,
-        status: "AGENDADO"
+        status: "AGENDADO",
+        criadoEm: new Date().toISOString()
     };
 
     DB.addReserva(novaReserva);
 
-    if (!clientesFidelidade.some(c => c.nome.toLowerCase() === agendamentoAtivo.cliente.toLowerCase())) {
+    const clienteExiste = clientesFidelidade.some(c => c.nome.toLowerCase() === agendamentoAtivo.cliente.toLowerCase());
+    if (!clienteExiste) {
         clientesFidelidade.push({
+            id: Date.now(),
             nome: agendamentoAtivo.cliente,
-            contato: "(11) 99999-0000",
+            contato: telefoneCliente,
             ultimoProc: agendamentoAtivo.servico.nome,
             historicoProdutos: "Nenhum histórico",
-            notas: "Registrado via agendamento online."
+            notas: "Registrado via agendamento online.",
+            historicoProcedimentos: []
         });
+        DB_CLIENTES.salvar(clientesFidelidade);
     }
 
-    alert(`Sucesso! Horário agendado para ${formatarData(agendamentoAtivo.data)} às ${agendamentoAtivo.hora}.`);
-    // Corrigido digitação para 'profissional'
-    agendamentoAtivo = { cliente: "Visitante", servico: null, profissional: null, data: null, hora: null };
-    navegarPara('reservas');
+    const mensagem = `Agendamento confirmado para ${agendamentoAtivo.cliente} no dia ${formatarData(agendamentoAtivo.data)} às ${agendamentoAtivo.hora} com ${agendamentoAtivo.profissional.nome}.\n\nImportante: cancelamentos ou remarcações só podem ser feitos até 24 horas antes do horário agendado.\nEm caso de falta, poderá haver dificuldade para agendar atendimentos futuros.`;
+
+    fecharModalAgendamento();
+    showCustomAlert(mensagem, function () {
+        agendamentoAtivo = { cliente: "Visitante", servico: null, profissional: null, data: null, hora: null };
+        navegarPara('reservas');
+    });
 }
 
 function renderizarMinhasReservas() {
@@ -433,15 +586,46 @@ function renderizarMinhasReservas() {
     }
 
     reservas.sort((a, b) => b.id - a.id).forEach(res => {
+        const podeCancelar = podeAlterarReserva(res);
         const tr = document.createElement('tr');
         tr.innerHTML = `
             <td style="font-weight: bold;">${formatarData(res.data)}</td>
             <td>${res.hora}</td>
             <td>${res.servico}</td>
             <td>${res.profissional}</td>
-            <td><span class="badge ${res.status.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, "")}">${res.status}</span></td>
+            <td>
+                <span class="badge ${res.status.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, "")}">${res.status}</span>
+                ${podeCancelar ? `<div style="margin-top: 0.5rem;"><button class="btn-action btn-excluir" onclick="cancelarOuRemarcarReserva(${res.id})">Cancelar</button></div>` : '<div style="margin-top: 0.5rem; color: #8a6b47; font-size: 0.8rem;">Prazo encerrado</div>'}
+            </td>
         `;
         container.appendChild(tr);
+    });
+}
+
+function podeAlterarReserva(reserva) {
+    if (!reserva.data || !reserva.hora) return false;
+
+    const [ano, mes, dia] = reserva.data.split('-').map(Number);
+    const [hora, minuto] = reserva.hora.split(':').map(Number);
+    const dataReserva = new Date(ano, mes - 1, dia, hora, minuto);
+    const agora = new Date();
+    const diffHoras = (dataReserva - agora) / (1000 * 60 * 60);
+    return diffHoras >= 24;
+}
+
+function cancelarOuRemarcarReserva(id) {
+    const reserva = DB.getReservas().find(item => item.id === id);
+    if (!reserva) return;
+
+    if (!podeAlterarReserva(reserva)) {
+        showCustomAlert('Só é possível cancelar até 24 horas antes do horário agendado.');
+        return;
+    }
+
+    showCustomConfirm('Deseja realmente cancelar este agendamento?', function () {
+        DB.deletarReserva(id);
+        renderizarMinhasReservas();
+        showCustomAlert('Agendamento cancelado com sucesso.');
     });
 }
 
@@ -511,17 +695,17 @@ function salvarBloqueioAgenda() {
     const motivo = document.getElementById('lock-motivo')?.value?.trim() || '';
 
     if (!prof || !dataInicio || !dataFim) {
-        alert('Selecione o profissional e o intervalo de datas para bloquear a agenda.');
+        showCustomAlert('Selecione o profissional e o intervalo de datas para bloquear a agenda.');
         return;
     }
 
     if (!motivo) {
-        alert('Informe uma justificativa para o bloqueio.');
+        showCustomAlert('Informe uma justificativa para o bloqueio.');
         return;
     }
 
     if (dataInicio > dataFim) {
-        alert('A data inicial não pode ser maior que a data final.');
+        showCustomAlert('A data inicial não pode ser maior que a data final.');
         return;
     }
 
@@ -536,10 +720,10 @@ function salvarBloqueioAgenda() {
 
     if (bloqueioEditandoId !== null) {
         DB_BLOQUEIOS.atualizarBloqueio(bloqueioPayload);
-        alert(`Bloqueio atualizado para ${prof} no período de ${formatarData(dataInicio)} a ${formatarData(dataFim)}.`);
+        showCustomAlert(`Bloqueio atualizado para ${prof} no período de ${formatarData(dataInicio)} a ${formatarData(dataFim)}.`);
     } else {
         DB_BLOQUEIOS.addBloqueio(bloqueioPayload);
-        alert(`Bloqueio salvo para ${prof} no período de ${formatarData(dataInicio)} a ${formatarData(dataFim)}.`);
+        showCustomAlert(`Bloqueio salvo para ${prof} no período de ${formatarData(dataInicio)} a ${formatarData(dataFim)}.`);
     }
 
     renderizarTabelaBloqueios();
@@ -583,7 +767,7 @@ function excluirBloqueio(id) {
 
     DB_BLOQUEIOS.removerBloqueio(id);
     renderizarTabelaBloqueios();
-    alert('Bloqueio removido com sucesso.');
+    showCustomAlert('Bloqueio removido com sucesso.');
 }
 
 // --- ENGENHARIA DO PAINEL GESTÃO ADM ---
@@ -619,10 +803,11 @@ function renderizarTabelaAdminAgendamentos() {
         const tr = document.createElement('tr');
 
         let selectStatus = `
-            <select class="btn-action btn-status-alt" onchange="mudarStatusAgendamento(${res.id}, this.value)">
+            <label class="sr-only" for="status-${res.id}">Status</label>
+            <select id="status-${res.id}" class="btn-action btn-status-alt" onchange="mudarStatusAgendamento(${res.id}, this.value)" title="Alterar status do atendimento">
                 <option value="AGENDADO" ${res.status === 'AGENDADO' ? 'selected' : ''}>Agendado</option>
                 <option value="CONFIRMADO" ${res.status === 'CONFIRMADO' ? 'selected' : ''}>Confirmado</option>
-                <option value="CONCLUÍDO" ${res.status === 'CONCLUÍDO' ? 'selected' : ''}>Concluido</option>
+                <option value="CONCLUÍDO" ${res.status === 'CONCLUÍDO' ? 'selected' : ''}>Concluído</option>
                 <option value="CANCELADO" ${res.status === 'CANCELADO' ? 'selected' : ''}>Cancelado</option>
             </select>
         `;
@@ -638,7 +823,7 @@ function renderizarTabelaAdminAgendamentos() {
             <td>
                 <div class="btn-actions-wrapper">
                     ${selectStatus}
-                    <button class="btn-action btn-excluir" onclick="excluirAgendamentoDefinitivo(${res.id})"><i class="fa-solid fa-trash"></i></button>
+                    <button class="btn-action btn-excluir" onclick="excluirAgendamentoDefinitivo(${res.id})" title="Cancelar ou excluir agendamento"><i class="fa-solid fa-trash"></i></button>
                 </div>
             </td>
         `;
@@ -649,13 +834,15 @@ function renderizarTabelaAdminAgendamentos() {
 function mudarStatusAgendamento(id, status) {
     DB.mudarStatus(id, status);
     renderizarTabelaAdminAgendamentos();
+    showCustomAlert(`Status alterado para ${status === 'CANCELADO' ? 'Cancelado' : status === 'CONCLUÍDO' ? 'Concluído' : status === 'CONFIRMADO' ? 'Confirmado' : 'Agendado'}.`);
 }
 
 function excluirAgendamentoDefinitivo(id) {
-    if (confirm("Deseja realmente EXCLUIR esse agendamento permanentemente do sistema?")) {
+    showCustomConfirm("Deseja realmente cancelar/excluir este agendamento?", function () {
         DB.deletarReserva(id);
         renderizarTabelaAdminAgendamentos();
-    }
+        showCustomAlert('Agendamento removido com sucesso.');
+    });
 }
 
 function limparFiltrosAdmin() {
@@ -675,12 +862,261 @@ function renderizarClientesFidelidade() {
         tr.innerHTML = `
             <td style="font-weight: bold; color: var(--brand-dark);">${cli.nome}</td>
             <td>${cli.contato}</td>
-            <td><span style="font-weight: bold;">${cli.ultimoProc}</span></td>
-            <td style="font-style: italic; font-size: 0.85rem; color: #555;">${cli.historicoProdutos}</td>
-            <td><span style="font-size: 0.85rem; color: #444;">${cli.notas}</span></td>
+            <td><span style="font-weight: bold;">${cli.ultimoProc || 'Nenhum procedimento registrado'}</span></td>
+            <td style="font-style: italic; font-size: 0.85rem; color: #555;">${cli.historicoProdutos || 'Nenhum histórico'}</td>
+            <td><span style="font-size: 0.85rem; color: #444;">${cli.notas || 'Sem observações'}</span></td>
+            <td>
+                <div class="btn-actions-wrapper">
+                    <button class="btn-action btn-status-alt" onclick="editarCliente(${cli.id})"><i class="fa-solid fa-pen"></i></button>
+                    <button class="btn-action btn-excluir" onclick="excluirCliente(${cli.id})"><i class="fa-solid fa-trash"></i></button>
+                    <button class="btn-action btn-status-alt" onclick="abrirFichaCliente(${cli.id})"><i class="fa-solid fa-file-lines"></i></button>
+                </div>
+            </td>
         `;
         container.appendChild(tr);
     });
+}
+
+function limparFormularioCliente() {
+    document.getElementById('cliente-id').value = '';
+    document.getElementById('cliente-nome').value = '';
+    document.getElementById('cliente-contato').value = '';
+    document.getElementById('cliente-notas').value = '';
+}
+
+function salvarCliente() {
+    const id = document.getElementById('cliente-id').value;
+    const nome = document.getElementById('cliente-nome').value.trim();
+    const contato = document.getElementById('cliente-contato').value.trim();
+    const notas = document.getElementById('cliente-notas').value.trim();
+
+    if (!nome || !contato) {
+        showCustomAlert('Preencha nome e contato do cliente.');
+        return;
+    }
+
+    if (id) {
+        const cliente = clientesFidelidade.find(c => c.id == id);
+        if (cliente) {
+            cliente.nome = nome;
+            cliente.contato = contato;
+            cliente.notas = notas;
+            cliente.ultimoProc = cliente.ultimoProc || 'Nenhum procedimento registrado';
+            cliente.historicoProdutos = cliente.historicoProdutos || 'Nenhum histórico';
+        }
+    } else {
+        const novoCliente = {
+            id: Date.now(),
+            nome,
+            contato,
+            ultimoProc: 'Nenhum procedimento registrado',
+            historicoProdutos: 'Nenhum histórico',
+            notas,
+            historicoProcedimentos: []
+        };
+        clientesFidelidade.push(novoCliente);
+    }
+
+    DB_CLIENTES.salvar(clientesFidelidade);
+    limparFormularioCliente();
+    renderizarClientesFidelidade();
+    showCustomAlert('Cliente salvo com sucesso!');
+}
+
+function editarCliente(id) {
+    const cliente = clientesFidelidade.find(c => c.id == id);
+    if (!cliente) return;
+
+    document.getElementById('cliente-id').value = cliente.id;
+    document.getElementById('cliente-nome').value = cliente.nome;
+    document.getElementById('cliente-contato').value = cliente.contato;
+    document.getElementById('cliente-notas').value = cliente.notas || '';
+    document.getElementById('cliente-nome').focus();
+}
+
+function excluirCliente(id) {
+    showCustomConfirm('Deseja remover este cliente da ficha?', function () {
+        clientesFidelidade = clientesFidelidade.filter(c => c.id !== id);
+        DB_CLIENTES.salvar(clientesFidelidade);
+        renderizarClientesFidelidade();
+        const ficha = document.getElementById('cliente-ficha-detalhes');
+        if (ficha) ficha.innerHTML = '';
+    });
+}
+
+function formatarValorCliente(valor) {
+    if (valor === null || valor === undefined || valor === '') return 'Não informado';
+
+    const valorTexto = String(valor).trim();
+    const numero = Number(valorTexto.replace(/[R$\.\s]/g, '').replace(',', '.'));
+
+    if (!Number.isNaN(numero)) {
+        return numero.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    }
+
+    return valorTexto;
+}
+
+function formatarFormaPagamento(valor) {
+    const mapa = {
+        dinheiro: 'Dinheiro',
+        pix: 'Pix',
+        cartao_credito: 'Cartão de crédito',
+        cartao_debito: 'Cartão de débito'
+    };
+
+    return mapa[valor] || valor || 'Não informado';
+}
+
+function adicionarLinhaProduto() {
+    const lista = document.getElementById('cliente-produtos-lista');
+    if (!lista) return;
+
+    const item = document.createElement('div');
+    item.className = 'cliente-produto-item';
+    item.innerHTML = `
+        <input type="text" class="cliente-produto-nome" placeholder="Nome do produto">
+        <input type="text" class="cliente-produto-qtd" placeholder="Ex: 2 unidades ou 1 par" value="1">
+        <button type="button" class="btn-action btn-excluir" onclick="this.parentElement.remove()"><i class="fa-solid fa-minus"></i></button>
+    `;
+    lista.appendChild(item);
+}
+
+function salvarProcedimentoCliente() {
+    const cliente = clientesFidelidade.find(c => c.id == clienteFichaAtivaId);
+    if (!cliente) return;
+
+    const data = document.getElementById('cliente-proc-data')?.value;
+    const servico = document.getElementById('cliente-proc-servico')?.value.trim();
+    const profissional = document.getElementById('cliente-proc-profissional')?.value.trim();
+    const descricao = document.getElementById('cliente-proc-descricao')?.value.trim();
+    const valorCobrado = document.getElementById('cliente-proc-valor')?.value.trim();
+    const formaPagamento = document.getElementById('cliente-proc-pagamento')?.value;
+
+    if (!data || !servico || !profissional) {
+        showCustomAlert('Preencha data, serviço e profissional para registrar o procedimento.');
+        return;
+    }
+
+    const produtos = Array.from(document.querySelectorAll('.cliente-produto-item')).map(item => {
+        const nome = item.querySelector('.cliente-produto-nome')?.value.trim();
+        const qtd = item.querySelector('.cliente-produto-qtd')?.value.trim();
+        return nome && qtd ? { nome, quantidade: qtd } : null;
+    }).filter(Boolean);
+
+    cliente.historicoProcedimentos = cliente.historicoProcedimentos || [];
+    cliente.historicoProcedimentos.unshift({
+        data,
+        servico,
+        profissional,
+        descricao,
+        produtos,
+        valorCobrado,
+        formaPagamento
+    });
+
+    cliente.ultimoProc = servico;
+    const resumoProdutos = produtos.length > 0
+        ? produtos.map(p => `${p.nome} (${p.quantidade})`).join(', ')
+        : 'Nenhum produto registrado';
+    cliente.historicoProdutos = resumoProdutos;
+
+    DB_CLIENTES.salvar(clientesFidelidade);
+    renderizarClientesFidelidade();
+    abrirFichaCliente(cliente.id);
+    showCustomAlert('Procedimento registrado com sucesso!');
+}
+
+function abrirFichaCliente(id) {
+    const cliente = clientesFidelidade.find(c => c.id == id);
+    const ficha = document.getElementById('cliente-ficha-detalhes');
+    if (!cliente || !ficha) return;
+
+    clienteFichaAtivaId = cliente.id;
+
+    const historicoProcedimentos = cliente.historicoProcedimentos || [];
+    const valoresAnteriores = historicoProcedimentos.map(proc => proc.valorCobrado).filter(Boolean);
+    const formasPagamentoUsadas = [...new Set(historicoProcedimentos.map(proc => proc.formaPagamento).filter(Boolean))];
+
+    const historico = historicoProcedimentos.map(proc => {
+        const produtosHtml = (proc.produtos || []).map(prod => `
+            <li>${prod.nome} — qtd: ${prod.quantidade}</li>
+        `).join('');
+        return `
+            <div class="cliente-historico-item">
+                <div class="cliente-historico-topo">
+                    <strong>${formatarData(proc.data)}</strong>
+                    <span>${proc.servico}</span>
+                </div>
+                <p><strong>Profissional:</strong> ${proc.profissional}</p>
+                <p><strong>Descrição:</strong> ${proc.descricao || 'Sem descrição'}</p>
+                <p><strong>Valor cobrado:</strong> ${formatarValorCliente(proc.valorCobrado)}</p>
+                <p><strong>Forma de pagamento:</strong> ${formatarFormaPagamento(proc.formaPagamento)}</p>
+                <div><strong>Produtos utilizados:</strong><ul>${produtosHtml || '<li>Nenhum produto registrado</li>'}</ul></div>
+            </div>
+        `;
+    }).join('');
+
+    ficha.innerHTML = `
+        <div class="cliente-ficha-card">
+            <h3>Ficha de ${cliente.nome}</h3>
+            <p><strong>Contato:</strong> ${cliente.contato}</p>
+            <p><strong>Notas:</strong> ${cliente.notas || 'Sem observações'}</p>
+            <p><strong>Último procedimento:</strong> ${cliente.ultimoProc || 'Nenhum registro'}</p>
+            <p><strong>Valores cobrados anteriormente:</strong> ${valoresAnteriores.length ? valoresAnteriores.map(valor => formatarValorCliente(valor)).join(' • ') : 'Nenhum valor registrado'}</p>
+            <p><strong>Formas de pagamento utilizadas:</strong> ${formasPagamentoUsadas.length ? formasPagamentoUsadas.map(valor => formatarFormaPagamento(valor)).join(' • ') : 'Nenhuma forma registrada'}</p>
+
+            <div class="cliente-procedimento-form">
+                <h4>Registrar novo procedimento</h4>
+                <div class="cliente-procedimento-grid">
+                    <div class="form-group">
+                        <label>Data</label>
+                        <input type="date" id="cliente-proc-data">
+                    </div>
+                    <div class="form-group">
+                        <label>Serviço</label>
+                        <input type="text" id="cliente-proc-servico" placeholder="Ex: Hidratação">
+                    </div>
+                    <div class="form-group">
+                        <label>Profissional</label>
+                        <input type="text" id="cliente-proc-profissional" placeholder="Ex: Jessica Silva">
+                    </div>
+                    <div class="form-group">
+                        <label>Descrição</label>
+                        <textarea id="cliente-proc-descricao" rows="3" placeholder="Descreva o procedimento realizado"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Valor cobrado</label>
+                        <input type="text" id="cliente-proc-valor" placeholder="Ex: 120,00">
+                    </div>
+                    <div class="form-group">
+                        <label>Forma de pagamento</label>
+                        <select id="cliente-proc-pagamento">
+                            <option value="">Selecione</option>
+                            <option value="dinheiro">Dinheiro</option>
+                            <option value="pix">Pix</option>
+                            <option value="cartao_credito">Cartão de crédito</option>
+                            <option value="cartao_debito">Cartão de débito</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="cliente-produtos-lista" id="cliente-produtos-lista"></div>
+
+                <div class="cliente-procedimento-actions">
+                    <button type="button" class="submit-btn secondary-btn" onclick="adicionarLinhaProduto()">+ Adicionar produto</button>
+                    <button type="button" class="submit-btn" onclick="salvarProcedimentoCliente()">Salvar procedimento</button>
+                </div>
+            </div>
+
+            <div class="cliente-historico-lista">
+                <h4>Histórico de procedimentos</h4>
+                ${historico || '<p>Nenhum procedimento registrado.</p>'}
+            </div>
+        </div>
+    `;
+
+    adicionarLinhaProduto();
 }
 
 function salvarNovoServico() {
@@ -697,7 +1133,7 @@ function salvarNovoServico() {
     const preco = parseFloat(precoEl.value);
 
     if (!nome || !tempo || isNaN(preco)) {
-        alert("Preencha todos os campos do serviço.");
+        showCustomAlert("Preencha todos os campos do serviço.");
         return;
     }
 
@@ -705,7 +1141,7 @@ function salvarNovoServico() {
     renderizarServicos();
 
     nomeEl.value = ''; tempoEl.value = ''; precoEl.value = '';
-    alert("Serviço cadastrado com sucesso!");
+    showCustomAlert("Serviço cadastrado com sucesso!");
 }
 
 function formatarData(dataStr) {

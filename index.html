@@ -213,7 +213,7 @@
                             </div>
                         </div>
                     </div>
-                    
+
                     <!-- ABA AGENDA DO DIA (FILTRÁVEL E COM CONTROLES COMPLETOS) -->
                     <div id="adm-tab-agenda" class="adm-tab-content">
                         <div class="form-grid-filter">
@@ -232,7 +232,7 @@
                                     <option value="Brenda Francco">Brenda Francco</option>
                                     <option value="Djeissy Massunaga">Djeissy Massunaga</option>
                                     <option value="Felipe Godoy">Felipe Godoy</option>
-                                    <option value="Jessica Silva">Jessica Silva</option>
+                                    <option value="Jéssica Silva">Jéssica Silva</option>
                                 </select>
                             </div>
                             <div class="form-group">
@@ -264,6 +264,29 @@
 
                     <!-- ABA CLIENTES -->
                     <div id="adm-tab-clientes" class="adm-tab-content hidden">
+                        <div class="cliente-form-card">
+                            <h3 class="bloqueios-title">Cadastro e edição de clientes</h3>
+                            <div class="form-grid-filter">
+                                <div class="form-group">
+                                    <label>Nome completo</label>
+                                    <input type="hidden" id="cliente-id">
+                                    <input type="text" id="cliente-nome" placeholder="Ex: Ana Paula de Souza">
+                                </div>
+                                <div class="form-group">
+                                    <label>Contato</label>
+                                    <input type="text" id="cliente-contato" placeholder="Ex: (11) 99999-0000">
+                                </div>
+                                <div class="form-group">
+                                    <label>Notas / Anamnese</label>
+                                    <textarea id="cliente-notas" rows="3" placeholder="Observações relevantes do cliente"></textarea>
+                                </div>
+                                <div class="btn-cad-align">
+                                    <button class="submit-btn" onclick="salvarCliente()">Salvar cliente</button>
+                                    <button class="submit-btn secondary-btn" onclick="limparFormularioCliente()">Cancelar</button>
+                                </div>
+                            </div>
+                        </div>
+
                         <div class="table-responsive">
                             <table>
                                 <thead>
@@ -273,11 +296,14 @@
                                         <th>Último Procedimento</th>
                                         <th>Histórico de Produtos</th>
                                         <th>Notas / Anamnese</th>
+                                        <th>Ações</th>
                                     </tr>
                                 </thead>
                                 <tbody id="adm-tabela-clientes"></tbody>
                             </table>
                         </div>
+
+                        <div id="cliente-ficha-detalhes" class="cliente-ficha-panel"></div>
                     </div>
 
                     <!-- ABA CADASTROS -->
@@ -382,6 +408,54 @@
             </div>
         </div>
     </footer>
+
+    <!-- MODAL CUSTOMIZADO DE CONFIRMAÇÃO DE AGENDAMENTO -->
+    <div id="modal-agendamento-overlay" class="modal-overlay hidden">
+        <div class="modal-box">
+            <h3 class="modal-title"><i class="fa-solid fa-calendar-check"></i> Finalizar Agendamento</h3>
+            <p class="modal-subtitle">Preencha seus dados para concluir a reserva.</p>
+
+            <div class="form-group modal-field">
+                <label>Nome completo</label>
+                <input type="text" id="modal-input-nome" placeholder="Ex: Ana Paula de Souza">
+            </div>
+            <div class="form-group modal-field">
+                <label>Telefone para contato</label>
+                <input type="text" id="modal-input-telefone" placeholder="Ex: (11) 99999-0000">
+            </div>
+
+            <p id="modal-erro-msg" class="modal-erro hidden"></p>
+
+            <div class="modal-actions">
+                <button class="submit-btn" onclick="confirmarDadosModal()">Confirmar Agendamento</button>
+                <button class="submit-btn secondary-btn" onclick="fecharModalAgendamento()">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL GENÉRICO DE ALERTA (substitui alert() nativo) -->
+    <div id="modal-alert-overlay" class="modal-overlay hidden">
+        <div class="modal-box">
+            <h3 class="modal-title"><i class="fa-solid fa-circle-check"></i> Aviso</h3>
+            <p id="modal-alert-mensagem" class="modal-mensagem"></p>
+            <div class="modal-actions">
+                <button class="submit-btn" onclick="fecharCustomAlert()">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL GENÉRICO DE CONFIRMAÇÃO (substitui confirm() nativo) -->
+    <div id="modal-confirm-overlay" class="modal-overlay hidden">
+        <div class="modal-box">
+            <h3 class="modal-title"><i class="fa-solid fa-circle-question"></i> Confirmação</h3>
+            <p id="modal-confirm-mensagem" class="modal-mensagem"></p>
+            <div class="modal-actions">
+                <button class="submit-btn" onclick="confirmarCustomConfirm()">Confirmar</button>
+                <button class="submit-btn secondary-btn" onclick="cancelarCustomConfirm()">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
     <script src="scripts.js"></script>
 </body>
 
