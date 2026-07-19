@@ -9,6 +9,8 @@
     --text-muted: #8c827c;
     --card-bg: #ffffff;
     --border-light: #eae5e1;
+    color-scheme: light;
+    accent-color: var(--brand-bg);
 }
 
 /* --- RESET GERAL COM ADAPTAÇÃO PARA IPHONE --- */
@@ -20,6 +22,11 @@
     -webkit-tap-highlight-color: transparent;
 }
 
+html {
+    overflow-x: hidden;
+    width: 100%;
+}
+
 body {
     background-color: var(--brand-bg);
     color: var(--text-dark);
@@ -28,6 +35,8 @@ body {
     padding-bottom: calc(80px + env(safe-area-inset-bottom));
     display: flex;
     flex-direction: column;
+    overflow-x: hidden;
+    width: 100%;
 }
 
 .app-wrapper {
@@ -38,6 +47,7 @@ body {
     display: flex;
     flex-direction: column;
     background-color: var(--brand-bg);
+    overflow-x: hidden;
 }
 
 /* --- HEADER PRINCIPAL --- */
@@ -92,6 +102,7 @@ header.main-header {
     grid-template-columns: 280px 1fr;
     gap: 2rem;
     padding: 2rem;
+    max-width: 100%;
 }
 
 aside.sidebar {
@@ -132,6 +143,8 @@ main.content-area {
     padding: 2rem;
     box-shadow: 0 10px 30px rgba(0,0,0,0.15);
     min-height: 600px;
+    max-width: 100%;
+    overflow-x: hidden;
 }
 
 .about-card {
@@ -212,7 +225,7 @@ main.content-area {
     justify-content: center;
     min-height: 320px;
     text-decoration: none;
-    background: linear-gradient(135deg, rgba(0,0,0,0.15), rgba(0,0,0,0.5)), url('https://instagram.fbjp2-1.fna.fbcdn.net/v/t51.82787-19/656874381_18072033023539126_1468598117662249630_n.jpg?stp=dst-jpg_s150x150_tt6&efg=eyJ2ZW5jb2RlX3RhZyI6InByb2ZpbGVfcGljLmRqYW5nby4xMDgwLmMyIn0&_nc_ht=instagram.fbjp2-1.fna.fbcdn.net&_nc_cat=110&_nc_oc=Q6cZ2gEWlzSn2dRX2KVZ3_l-kTTm_dbP4MSuXDgM6ERpH1e8w8UxmX0uXFjo6-f2mnPZC3s&_nc_ohc=FpTC7e6S8w0Q7kNvwHalGoN&_nc_gid=z3wtm6hTlzwmvvKS_KjKuw&edm=AOQ1c0wBAAAA&ccb=7-5&oh=00_AQAfqjGionaVukFABrGquhNcjqwDtDBjEym_a0pnajV67g&oe=6A60923D&_nc_sid=8b3546') center/cover no-repeat;
+    background: linear-gradient(135deg, rgba(0,0,0,0.15), rgba(0,0,0,0.5)), url('imagens/capa-reel.jpg') center/cover no-repeat;
     color: #fff;
     text-align: center;
     padding: 1rem;
@@ -263,6 +276,7 @@ main.content-area {
 
 .view-screen {
     animation: fadeIn 0.3s ease-in-out;
+    max-width: 100%;
 }
 
 @keyframes fadeIn {
@@ -378,10 +392,12 @@ main.content-area {
 
 .search-container {
     margin-bottom: 1.5rem;
+    max-width: 100%;
 }
 
 .search-container input {
     width: 100%;
+    max-width: 100%;
     padding: 1rem;
     border: 1px solid var(--border-light);
     border-radius: 12px;
@@ -393,9 +409,11 @@ main.content-area {
     display: flex;
     gap: 0.5rem;
     overflow-x: auto;
+    overflow-y: hidden;
     margin-bottom: 2rem;
     padding-bottom: 0.5rem;
     -webkit-overflow-scrolling: touch; /* Scroll fluido iOS */
+    max-width: 100%;
 }
 
 .cat-btn {
@@ -408,6 +426,7 @@ main.content-area {
     font-weight: bold;
     color: var(--text-dark);
     white-space: nowrap;
+    flex-shrink: 0;
 }
 
 .cat-btn.active {
@@ -420,6 +439,7 @@ main.content-area {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
     gap: 1rem;
+    max-width: 100%;
 }
 
 .service-card, .prof-card {
@@ -432,6 +452,11 @@ main.content-area {
     justify-content: space-between;
     align-items: center;
     transition: all 0.2s;
+    min-width: 0;
+}
+
+.service-card h4, .prof-card h4 {
+    word-break: break-word;
 }
 
 .service-card:hover, .prof-card:hover {
@@ -449,6 +474,7 @@ main.content-area {
     justify-content: center;
     overflow: hidden;
     border: 2px solid var(--brand-bg);
+    flex-shrink: 0;
 }
 
 .prof-avatar img {
@@ -472,6 +498,7 @@ main.content-area {
     text-align: center;
     font-weight: bold;
     color: var(--brand-dark);
+    max-width: 100%;
 }
 
 .slots-grid {
@@ -520,6 +547,7 @@ main.content-area {
     gap: 0.5rem;
     margin-bottom: 2rem;
     overflow-x: auto;
+    max-width: 100%;
 }
 
 .tab-btn {
@@ -531,6 +559,7 @@ main.content-area {
     font-weight: bold;
     color: var(--text-muted);
     white-space: nowrap;
+    flex-shrink: 0;
 }
 
 .tab-btn.active {
@@ -547,6 +576,7 @@ main.content-area {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
     gap: 1rem;
+    max-width: 100%;
 }
 
 .btn-filter-align {
@@ -566,6 +596,7 @@ main.content-area {
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
+    min-width: 0;
 }
 
 .form-group label {
@@ -580,6 +611,7 @@ main.content-area {
     border-radius: 8px;
     outline: none;
     font-size: 1rem; /* Previne zoom forçado automático no Safari iOS */
+    max-width: 100%;
 }
 
 .submit-btn {
@@ -604,6 +636,7 @@ main.content-area {
     border: 1px solid var(--border-light);
     margin-top: 1rem;
     -webkit-overflow-scrolling: touch;
+    max-width: 100%;
 }
 
 .admin-bloqueios-tab {
@@ -742,6 +775,7 @@ th {
     display: flex;
     gap: 0.4rem;
     flex-wrap: nowrap;
+    align-items: center;
 }
 
 .btn-action {
@@ -774,6 +808,13 @@ textarea:focus,
 /* Ajusta a cor do calendário do input type=date para combinar com o marrom */
 input[type="date"] {
     color-scheme: light; /* mantém ícone escuro, evita tema azul/escuro do SO */
+    accent-color: var(--brand-bg);
+}
+
+/* O ícone do calendário no Chrome/Edge pode ser tingido para aproximar da paleta */
+input[type="date"]::-webkit-calendar-picker-indicator {
+    filter: invert(38%) sepia(11%) saturate(1114%) hue-rotate(346deg) brightness(93%) contrast(87%);
+    cursor: pointer;
 }
 
 /* Ajusta a cor de "seleção" nativa do texto (evita o azul padrão ao selecionar texto) */
@@ -782,9 +823,114 @@ input[type="date"] {
     color: #fff;
 }
 
-/* Tenta aproximar a cor do select nativo (funciona parcialmente, depende do navegador/SO) */
-select {
-    accent-color: var(--brand-bg);
+/* O <select> nativo original fica escondido: veja o componente
+   .custom-select-wrapper logo abaixo, que substitui sua aparência
+   visual por completo (inclusive a lista de opções), já que a caixa
+   de opções nativa é desenhada pelo sistema operacional e não pode
+   ser recolorida via CSS puro. */
+select[data-enhanced] {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+    height: 0;
+    width: 0;
+}
+
+/* --- COMPONENTE DE SELECT CUSTOMIZADO (cores da marca em vez do azul do navegador) --- */
+.custom-select-wrapper {
+    position: relative;
+    width: 100%;
+    max-width: 100%;
+}
+
+.custom-select-trigger {
+    width: 100%;
+    padding: 0.8rem;
+    border: 1px solid var(--border-light);
+    border-radius: 8px;
+    background-color: #ffffff;
+    color: var(--text-dark);
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 1rem;
+    user-select: none;
+    transition: box-shadow 0.15s, border-color 0.15s;
+}
+
+.custom-select-trigger::after {
+    content: '';
+    flex-shrink: 0;
+    width: 8px;
+    height: 8px;
+    border-right: 2px solid var(--brand-bg);
+    border-bottom: 2px solid var(--brand-bg);
+    transform: rotate(45deg);
+    margin-top: -4px;
+    transition: transform 0.15s;
+}
+
+.custom-select-wrapper.open .custom-select-trigger::after {
+    transform: rotate(-135deg);
+    margin-top: 3px;
+}
+
+.custom-select-wrapper.open .custom-select-trigger {
+    border-color: var(--brand-bg);
+    box-shadow: 0 0 0 3px rgba(142, 111, 94, 0.25);
+}
+
+.custom-select-options {
+    display: none;
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    right: 0;
+    background-color: #ffffff;
+    border: 1px solid var(--border-light);
+    border-radius: 10px;
+    max-height: 240px;
+    overflow-y: auto;
+    z-index: 60;
+    box-shadow: 0 12px 30px rgba(63, 48, 38, 0.18);
+    -webkit-overflow-scrolling: touch;
+}
+
+.custom-select-wrapper.open .custom-select-options {
+    display: block;
+}
+
+.custom-select-option {
+    padding: 0.7rem 0.9rem;
+    font-size: 0.95rem;
+    color: var(--text-dark);
+    cursor: pointer;
+}
+
+.custom-select-option:hover,
+.custom-select-option.highlighted {
+    background-color: var(--brand-bg);
+    color: #ffffff;
+}
+
+.custom-select-option.selected {
+    font-weight: bold;
+    background-color: var(--brand-light);
+    color: var(--brand-dark);
+}
+
+/* Selects compactos usados dentro de tabelas (status do agendamento) */
+td .custom-select-wrapper {
+    min-width: 140px;
+}
+
+td .custom-select-trigger {
+    padding: 0.5rem 0.7rem;
+    font-size: 0.8rem;
+    font-weight: bold;
+    border-radius: 6px;
 }
 
 /* --- MODAL CUSTOMIZADO (substitui prompt/alert nativos) --- */
@@ -877,6 +1023,7 @@ select {
         grid-template-columns: 1fr;
         padding: 1rem 0.9rem 5.5rem;
         gap: 1rem;
+        width: 100%;
     }
 
     aside.sidebar {
@@ -902,6 +1049,7 @@ select {
         padding: 1.1rem 0.9rem;
         border-radius: 18px;
         min-height: auto;
+        width: 100%;
     }
 
     .welcome-hero {

@@ -181,6 +181,93 @@ const DB_BLOQUEIOS = {
     }
 };
 
+// =====================================================================
+// --- COMPONENTE DE SELECT CUSTOMIZADO ---
+// Substitui a aparência do <select> nativo (incluindo a lista de opções,
+// que por padrão é desenhada pelo próprio sistema operacional e usa a
+// cor de destaque azul do Windows/Android/iOS, impossível de recolorir
+// só com CSS). O <select> original continua existindo escondido no DOM
+// para que todo o restante do código (que lê/escreve `.value`, dispara
+// `onchange`, etc.) continue funcionando exatamente como antes.
+// =====================================================================
+function enhanceSelects(root) {
+    const escopo = root || document;
+    const selects = escopo.querySelectorAll('select:not([data-enhanced])');
+
+    selects.forEach(select => {
+        select.setAttribute('data-enhanced', 'true');
+
+        const wrapper = document.createElement('div');
+        wrapper.className = 'custom-select-wrapper';
+        select.parentNode.insertBefore(wrapper, select);
+        wrapper.appendChild(select);
+
+        const trigger = document.createElement('div');
+        trigger.className = 'custom-select-trigger';
+        trigger.setAttribute('tabindex', '0');
+        wrapper.appendChild(trigger);
+
+        const optionsList = document.createElement('div');
+        optionsList.className = 'custom-select-options';
+        wrapper.appendChild(optionsList);
+
+        function construir() {
+            const opcaoAtual = select.options[select.selectedIndex];
+            trigger.textContent = opcaoAtual ? opcaoAtual.text : '';
+
+            optionsList.innerHTML = '';
+            Array.from(select.options).forEach((opcao, indice) => {
+                const item = document.createElement('div');
+                item.className = 'custom-select-option' + (indice === select.selectedIndex ? ' selected' : '');
+                item.textContent = opcao.text;
+                item.onclick = (evento) => {
+                    evento.stopPropagation();
+                    select.selectedIndex = indice;
+                    wrapper.classList.remove('open');
+                    construir();
+                    select.dispatchEvent(new Event('change', { bubbles: true }));
+                };
+                optionsList.appendChild(item);
+            });
+        }
+
+        select._rebuildCustomSelect = construir;
+        construir();
+
+        trigger.onclick = (evento) => {
+            evento.stopPropagation();
+            document.querySelectorAll('.custom-select-wrapper.open').forEach(outro => {
+                if (outro !== wrapper) outro.classList.remove('open');
+            });
+            wrapper.classList.toggle('open');
+        };
+
+        trigger.onkeydown = (evento) => {
+            if (evento.key === 'Enter' || evento.key === ' ') {
+                evento.preventDefault();
+                trigger.click();
+            }
+        };
+
+        // Sincroniza a caixa customizada sempre que o <select> tiver suas
+        // opções recriadas dinamicamente via innerHTML (ex: lista de profissionais).
+        const observador = new MutationObserver(construir);
+        observador.observe(select, { childList: true, subtree: true });
+    });
+}
+
+function sincronizarSelectCustomizado(id) {
+    const el = document.getElementById(id);
+    if (el && typeof el._rebuildCustomSelect === 'function') {
+        el._rebuildCustomSelect();
+    }
+}
+
+// Fecha qualquer dropdown customizado aberto ao clicar fora dele
+document.addEventListener('click', () => {
+    document.querySelectorAll('.custom-select-wrapper.open').forEach(w => w.classList.remove('open'));
+});
+
 // --- SISTEMA GENÉRICO DE MODAL (SUBSTITUI alert() E confirm() NATIVOS) ---
 function showCustomAlert(mensagem, callback) {
     const overlay = document.getElementById('modal-alert-overlay');
@@ -260,6 +347,9 @@ window.addEventListener('DOMContentLoaded', () => {
 
     renderizarTabelaBloqueios();
     renderizarClientesFidelidade();
+
+    // Aplica o select customizado (cores da marca) a todos os selects já presentes na página
+    enhanceSelects(document);
 });
 
 // --- NAVEGAÇÃO ---
@@ -634,6 +724,9 @@ function popularCamposBloqueio() {
     if (selectProfLock) {
         selectProfLock.innerHTML = profissionais.map(p => `<option value="${p.nome}">${p.nome}</option>`).join('');
     }
+    // Garante que também esteja habilitado como select customizado (idempotente)
+    enhanceSelects(document);
+    sincronizarSelectCustomizado('lock-profissional');
 }
 
 function resetarFormularioBloqueio() {
@@ -653,6 +746,9 @@ function resetarFormularioBloqueio() {
     if (turno) turno.value = 'DIA_TODO';
     const motivo = document.getElementById('lock-motivo');
     if (motivo) motivo.value = '';
+
+    sincronizarSelectCustomizado('lock-profissional');
+    sincronizarSelectCustomizado('lock-turno');
 }
 
 function preencherCamposBloqueio(bloqueio) {
@@ -667,6 +763,9 @@ function preencherCamposBloqueio(bloqueio) {
     if (dataFim) dataFim.value = bloqueio.dataFim || bloqueio.data || '';
     if (turno) turno.value = bloqueio.turno || 'DIA_TODO';
     if (motivo) motivo.value = bloqueio.motivo || '';
+
+    sincronizarSelectCustomizado('lock-profissional');
+    sincronizarSelectCustomizado('lock-turno');
 
     const btnSalvar = document.getElementById('btn-salvar-bloqueio');
     const btnCancelar = document.getElementById('btn-cancelar-edicao-bloqueio');
@@ -829,6 +928,9 @@ function renderizarTabelaAdminAgendamentos() {
         `;
         container.appendChild(tr);
     });
+
+    // Novos <select> de status foram criados agora: aplica o componente customizado neles
+    enhanceSelects(container);
 }
 
 function mudarStatusAgendamento(id, status) {
@@ -849,6 +951,7 @@ function limparFiltrosAdmin() {
     if (document.getElementById('filtro-adm-data')) document.getElementById('filtro-adm-data').value = '';
     if (document.getElementById('filtro-adm-prof')) document.getElementById('filtro-adm-prof').value = 'Todos';
     if (document.getElementById('filtro-adm-busca')) document.getElementById('filtro-adm-busca').value = '';
+    sincronizarSelectCustomizado('filtro-adm-prof');
     renderizarTabelaAdminAgendamentos();
 }
 
@@ -1117,6 +1220,9 @@ function abrirFichaCliente(id) {
     `;
 
     adicionarLinhaProduto();
+
+    // O select de forma de pagamento é criado agora dinamicamente: aplica o componente customizado
+    enhanceSelects(ficha);
 }
 
 function salvarNovoServico() {
