@@ -29,7 +29,7 @@ Este projeto consiste em um sistema de agendamento de serviços para salão de b
 
 ---
 
-# 🤖 Ferramentas de IA Utilizadas
+# Ferramentas de IA Utilizadas
 
 Durante o desenvolvimento foi utilizada a ferramenta de Inteligência Artificial **Gemini** como apoio para esclarecimento de dúvidas, sugestões de melhorias, organização do projeto e revisão de partes do código e auxilio na criação do site.
 
